@@ -11,6 +11,6 @@
 |:---|:---|
 | ```GPIOD_12``` | Test Led |
 | ```GPIOD_13``` | Test Led |
-| ```GPIOC_10``` | USART3 RX |
-| ```GPIOC_11``` | USART3 TX |
+| ```GPIOC_10``` | USART3 TX |
+| ```GPIOC_11``` | USART3 RX |
 ####
