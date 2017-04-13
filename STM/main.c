@@ -9,6 +9,9 @@ int main(void)
     Tim3Init(10000,840);
     LisInit();
 
+
+    cplx t = cexp(-I * PI * 2 / 4);
+
     while(1)
     {
 

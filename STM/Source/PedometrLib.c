@@ -4,11 +4,47 @@ TM_LIS302DL_LIS3DSH_t Axes_Data;
 TM_LIS302DL_LIS3DSH_Device_t IMU_Type;
 GPIO_InitTypeDef GPIO_InitStruct;
 
+double PI = 3.14159;
+
+cplx ActualSamples[256];
+uint8_t sample = 0;
+
+void _fft(cplx buf[], cplx out[], int n, int step)
+{
+	if (step < n)
+	{
+		_fft(out, buf, n, step * 2);
+		_fft(out + step, buf + step, n, step * 2);
+
+        int i;
+		for (i = 0; i < n; i += 2 * step)
+		{
+			//cplx t = cexp(-I * PI * i / n) * out[i + step]; // !
+			//buf[i / 2] = out[i] + t;
+			//buf[(i + n)/2] = out[i] - t;
+		}
+	}
+}
+
+void fft(cplx buf[], int n)
+{
+	cplx out[n];
+	int i;
+	for (i = 0; i < n; i++) out[i] = buf[i];
+
+	_fft(buf, out, n, 1);
+}
+
+
+
 void USART_puts(USART_TypeDef* USARTx, volatile char *s){
 
-	while(*s){
-		while( !(USARTx->SR & 0x00000040) );
+	while(*s)
+	{
+		while(!(USARTx->SR & 0x00000040));
+
 		USART_SendData(USARTx, *s);
+
 		*s++;
 	}
 }
@@ -26,6 +62,16 @@ void TIM3_IRQHandler(void)
     	char buff[50];
 
     	itoa(Axes_Data.X,buff,10);
+
+    	ActualSamples[sample] = Axes_Data.X;
+    	sample++;
+
+    	if (sample >= 255)
+    	{
+    		fft(ActualSamples,256);
+    		sample = 0;
+    	}
+
 
 		USART_puts(USART3, buff);
 		USART_puts(USART3, "\r\n");
