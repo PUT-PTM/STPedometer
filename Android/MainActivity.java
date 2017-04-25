@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -62,11 +63,11 @@ public class MainActivity extends AppCompatActivity {
                 setMargins(tv, (int)(width*.55*.25),(int)(height*.16*.1),0,0);
 
                 mButtonCancel = (Button) container.findViewById(R.id.buttonCancel);
-                setMargins(mButtonCancel, 0,(int)(height*.16*.5),(int)(width*.55*.05),0);
+                setMargins(mButtonCancel, 0,(int)(height*.16*.4),(int)(width*.55*.05),0);
                 mButtonCancel.setOnClickListener(cancel_button);
 
                 mButtonConfirm = (Button) container.findViewById(R.id.buttonConfirm);
-                setMargins(mButtonConfirm, (int)(width*.55*.05),(int)(height*.16*.5),0,0);
+                setMargins(mButtonConfirm, (int)(width*.55*.05),(int)(height*.16*.4),0,0);
                 mButtonConfirm.setOnClickListener(confirm_button);
             }
         });
@@ -86,7 +87,14 @@ public class MainActivity extends AppCompatActivity {
                     // if not let the user enable it
                     Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                     startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-                    Toast.makeText(getApplicationContext(), "Bluetooth turned on",Toast.LENGTH_LONG).show();
+
+                    //wait until user enables bluetooth
+                    while(!mBluetoothAdapter.isEnabled());
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }else{
                     Toast.makeText(getApplicationContext(), "Bluetooth already on", Toast.LENGTH_LONG).show();
 
@@ -103,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
                         // if our device is found make a connection and break the loop
                         if(device.getName().equals("HC-05"))
                         {
-                            Toast.makeText(getApplicationContext(), "HC-05 already paired",Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "Connected to HC-05",Toast.LENGTH_LONG).show();
                             (mConnectThread = new ConnectThread(device,mBluetoothAdapter,mTextViewSteps)).start();
                             break;
                         }
