@@ -88,10 +88,8 @@ public class MainActivity extends AppCompatActivity {
                     Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                     startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
 
-                    //wait until user enables bluetooth
-                    while(!mBluetoothAdapter.isEnabled());
                     try {
-                        TimeUnit.SECONDS.sleep(1);
+                        TimeUnit.MILLISECONDS.sleep(250);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
