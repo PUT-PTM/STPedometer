@@ -16,12 +16,15 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
     private TextView mTextViewSteps;
+    private TextView mTextViewCaloriesVar;
+    private TextView mTextViewMetersVar;
     private Button mButtonReset;
     private Button mButtonConnect;
     private Button mButtonCancel;
@@ -32,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private ConstraintLayout mConstraintLayout;
     private final int REQUEST_ENABLE_BT = 1;
     private ConnectThread mConnectThread;
+    ArrayList<TextView> textViewStorage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +43,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mTextViewSteps = (TextView) findViewById(R.id.textViewSteps);
+        mTextViewCaloriesVar = (TextView) findViewById(R.id.textViewCaloriesVar);
+        mTextViewMetersVar = (TextView) findViewById(R.id.textViewMetersVar);
         mButtonReset = (Button) findViewById(R.id.buttonReset);
         mButtonConnect = (Button) findViewById(R.id.buttonConnect);
         mConstraintLayout = (ConstraintLayout) findViewById(R.id.bgConstraintLayout);
+
+        textViewStorage = new ArrayList<>();
+        textViewStorage.add(mTextViewSteps);
+        textViewStorage.add(mTextViewMetersVar);
+        textViewStorage.add(mTextViewCaloriesVar);
 
         // Resets steps
         mButtonReset.setOnClickListener(new View.OnClickListener(){
@@ -110,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
                         if(device.getName().equals("HC-05"))
                         {
                             Toast.makeText(getApplicationContext(), "Connected to HC-05",Toast.LENGTH_LONG).show();
-                            (mConnectThread = new ConnectThread(device,mBluetoothAdapter,mTextViewSteps)).start();
+                            (mConnectThread = new ConnectThread(device,mBluetoothAdapter,textViewStorage)).start();
                             break;
                         }
                     }
@@ -133,6 +144,8 @@ public class MainActivity extends AppCompatActivity {
     private View.OnClickListener confirm_button = new View.OnClickListener() {
         public void onClick(View v) {
             mTextViewSteps.setText("0");
+            mTextViewCaloriesVar.setText("0");
+            mTextViewMetersVar.setText("0");
             mPopupWindow.dismiss();
         }
     };

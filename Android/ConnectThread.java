@@ -4,6 +4,8 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.util.Log;
+
+import java.util.ArrayList;
 import java.util.UUID;
 import android.widget.TextView;
 
@@ -16,14 +18,14 @@ import java.io.IOException;
 
 public class ConnectThread extends Thread {
     private HandleSTM mHandleSTM;
-    private TextView mTextView;
+    private ArrayList<TextView> textViewStorage;
     private BluetoothSocket mSocket;
     private final BluetoothDevice mDevice;
     private BluetoothAdapter mBluetoothAdapter;
     private final UUID MY_UUID = UUID.fromString("c1f5f63e-17c7-44fb-a037-c6eb48136c1f");
     private static final String TAG = "INFO";
 
-    public ConnectThread(BluetoothDevice device, BluetoothAdapter adapter, TextView textView) {
+    public ConnectThread(BluetoothDevice device, BluetoothAdapter adapter, ArrayList textViewStorage) {
         // Use a temporary object that is later assigned to mSocket
         BluetoothSocket tmp = null;
         mDevice = device;
@@ -35,7 +37,7 @@ public class ConnectThread extends Thread {
         } catch (IOException e) {
             Log.e(TAG, "Socket's create() method failed", e);
         }
-        mTextView = textView;
+        this.textViewStorage = textViewStorage;
         mBluetoothAdapter = adapter;
         mSocket = tmp;
     }
@@ -65,7 +67,7 @@ public class ConnectThread extends Thread {
 
         // The connection attempt succeeded. Perform work associated with
         // the connection in a separate thread.
-        (mHandleSTM = new HandleSTM(mSocket,mTextView)).start();
+        (mHandleSTM = new HandleSTM(mSocket,textViewStorage)).start();
     }
 
     // Closes the client socket and causes the thread to finish.
