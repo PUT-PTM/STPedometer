@@ -1,44 +1,23 @@
-#include "PedometrLib.h"
+/*
+ * Pedometr.c
+ *
+ *  Created on: 30.05.2017
+ *      Author: maks
+ */
+
+#include "Pedometr.h"
 
 TM_LIS302DL_LIS3DSH_t Axes_Data;
 TM_LIS302DL_LIS3DSH_Device_t IMU_Type;
 GPIO_InitTypeDef GPIO_InitStruct;
-
-double PI = 3.14159;
-
-cplx ActualSamples[256];
-uint8_t sample = 0;
-
-void _fft(cplx buf[], cplx out[], int n, int step)
+float32_t FFT_InputSamples[SAMPLES] = {0.0};
+float32_t FFT_OutputSamples[FFT_SIZE];
+arm_cfft_radix4_instance_f32 S;
+uint16_t n = 0;
+float32_t maxValue;
+uint32_t maxIndex;
+void USART_puts(USART_TypeDef* USARTx, volatile char *s)
 {
-	if (step < n)
-	{
-		_fft(out, buf, n, step * 2);
-		_fft(out + step, buf + step, n, step * 2);
-
-        int i;
-		for (i = 0; i < n; i += 2 * step)
-		{
-			//cplx t = cexp(-I * PI * i / n) * out[i + step]; // !
-			//buf[i / 2] = out[i] + t;
-			//buf[(i + n)/2] = out[i] - t;
-		}
-	}
-}
-
-void fft(cplx buf[], int n)
-{
-	cplx out[n];
-	int i;
-	for (i = 0; i < n; i++) out[i] = buf[i];
-
-	_fft(buf, out, n, 1);
-}
-
-
-
-void USART_puts(USART_TypeDef* USARTx, volatile char *s){
-
 	while(*s)
 	{
 		while(!(USARTx->SR & 0x00000040));
@@ -58,28 +37,19 @@ void TIM3_IRQHandler(void)
 		GPIO_ToggleBits(GPIOD,GPIO_Pin_12);
 		GPIO_ToggleBits(GPIOD,GPIO_Pin_13);
 
+//    	char buff[50];
+//    	itoa(Axes_Data.Y,buff,10);
 
-    	char buff[50];
-
-    	itoa(Axes_Data.X,buff,10);
-
-    	ActualSamples[sample] = Axes_Data.X;
-    	sample++;
-
-    	if (sample >= 255)
-    	{
-    		fft(ActualSamples,256);
-    		sample = 0;
-    	}
-
-
-		USART_puts(USART3, buff);
-		USART_puts(USART3, "\r\n");
+		if (n < SAMPLES)
+		{
+			FFT_InputSamples[n++] = 2.0;//(float32_t)Axes_Data.Y;
+			FFT_InputSamples[n++] = 0;
+		}
 
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+
 	}
 }
-
 void USART3Init(uint32_t BaudRate)
 {
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
@@ -130,7 +100,6 @@ void LedOutInit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, unsigned char Value)
     else
     	GPIO_ResetBits(GPIOx,GPIO_Pin);
 }
-
 void Tim3Init(uint32_t Period, uint16_t Prescaler)
 {
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
@@ -161,7 +130,6 @@ void Tim3Init(uint32_t Period, uint16_t Prescaler)
 	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
 
 }
-
 void LisInit(void)
 {
 	if (TM_LIS302DL_LIS3DSH_Detect() == TM_LIS302DL_LIS3DSH_Device_LIS302DL)
