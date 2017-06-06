@@ -6,11 +6,9 @@ import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-
 
 /**
  * Created by Keven on 18.04.2017.
@@ -18,90 +16,45 @@ import java.util.ArrayList;
 
 public class HandleSTM extends Thread {
 
-    private final InputStream mInStream;
-    private final BluetoothSocket mSocket;
-    private final OutputStream mOutStream;
-    private ArrayList textViewStorage;
     private static final String TAG = "MyActivity";
-    private byte[] mBuffer; // mmBuffer store for the stream
+    private final double meterAsOneStep = 0.762;
+
+    private final InputStream inStream;
+    private ArrayList textViewStorage;
+
     private int valueSteps;
     private int valueCalories;
     private double valueMeters;
-
-
-    private TextView mTextViewSteps;
-    private TextView mTextViewCaloriesVar;
-    private TextView mTextViewMetersVar;
+    private TextView textViewSteps;
+    private TextView textViewCaloriesVar;
+    private TextView textViewMetersVar;
     String resultMeters;
-
 
     public HandleSTM(BluetoothSocket socket, ArrayList textViewStorage) {
         this.textViewStorage = textViewStorage;
-        mSocket = socket;
+        prepereTextViews();
         InputStream tmpIn = null;
-        OutputStream tmpOut = null;
 
-        // Get the input and output streams; using temp objects because
-        // member streams are final.
         try {
             tmpIn = socket.getInputStream();
         } catch (IOException e) {
             Log.e(TAG, "Error occurred when creating input stream", e);
         }
-        try {
-            tmpOut = socket.getOutputStream();
-        } catch (IOException e) {
-            Log.e(TAG, "Error occurred when creating output stream", e);
-        }
-
-        mInStream = tmpIn;
-        mOutStream = tmpOut;
+        inStream = tmpIn;
     }
 
-    private void increaseValueAfterStep() {
-
-        mTextViewSteps = (TextView) textViewStorage.get(0);
-        mTextViewMetersVar = (TextView) textViewStorage.get(1);
-        mTextViewCaloriesVar = (TextView) textViewStorage.get(2);
-
-        // increase value of steps
-        valueSteps = Integer.parseInt(mTextViewSteps.getText().toString());
-        valueMeters = Double.parseDouble(mTextViewMetersVar.getText().toString());
-        valueCalories = Integer.parseInt(mTextViewCaloriesVar.getText().toString());
-        valueSteps += 1;
-
-        // increase value of calories
-        if (valueSteps % 20 == 0) {
-            valueCalories += 1;
-        }
-
-        // increase value of meters walked
-        valueMeters+=0.762;
-        BigDecimal bd = new BigDecimal(valueMeters);
-        bd = bd.setScale(2, RoundingMode.HALF_UP);
-        resultMeters = Double.toString(bd.doubleValue());
-
-
-
-
-        mTextViewSteps.post(new Runnable() {
-            public void run() {
-                mTextViewSteps.setText(Integer.toString(valueSteps));
-                mTextViewMetersVar.setText(resultMeters);
-                mTextViewCaloriesVar.setText(Integer.toString(valueCalories));
-            }
-        });
+    private void prepereTextViews() {
+        textViewSteps = (TextView) textViewStorage.get(0);
+        textViewMetersVar = (TextView) textViewStorage.get(1);
+        textViewCaloriesVar = (TextView) textViewStorage.get(2);
     }
 
     public void run() {
-        mBuffer = new byte[1024];
-        int numBytes; // bytes returned from read()
+        byte[] buffer = new byte[1024];
 
-        // Keep listening to the InputStream until an exception occurs.
         while (true) {
             try {
-                // Read from the InputStream.
-                numBytes = mInStream.read(mBuffer);
+                inStream.read(buffer);
                 increaseValueAfterStep();
 
             } catch (IOException e) {
@@ -110,4 +63,39 @@ public class HandleSTM extends Thread {
             }
         }
     }
+
+    private void increaseValueAfterStep() {
+        increaseValueOfSteps();
+        increaseValueOfMeters();
+        increaseValueOfCalories();
+
+        textViewSteps.post(new Runnable() {
+            public void run() {
+                textViewSteps.setText(Integer.toString(valueSteps));
+                textViewMetersVar.setText(resultMeters);
+                textViewCaloriesVar.setText(Integer.toString(valueCalories));
+            }
+        });
+    }
+
+    private void increaseValueOfSteps() {
+        valueSteps = Integer.parseInt(textViewSteps.getText().toString());
+        valueSteps += 1;
+    }
+
+    private void increaseValueOfMeters() {
+        valueMeters = Double.parseDouble(textViewMetersVar.getText().toString());
+        valueMeters += meterAsOneStep;
+        BigDecimal bd = new BigDecimal(valueMeters);
+        bd = bd.setScale(2, RoundingMode.HALF_UP);
+        resultMeters = Double.toString(bd.doubleValue());
+    }
+
+    private void increaseValueOfCalories() {
+        valueCalories = Integer.parseInt(textViewCaloriesVar.getText().toString());
+        if (valueSteps % 20 == 0) {
+            valueCalories += 1;
+        }
+    }
+
 }

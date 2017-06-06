@@ -1,14 +1,13 @@
 package com.keven.krokomierz;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.UUID;
-import android.widget.TextView;
 
+import android.widget.TextView;
 
 import java.io.IOException;
 
@@ -17,63 +16,47 @@ import java.io.IOException;
  */
 
 public class ConnectThread extends Thread {
-    private HandleSTM mHandleSTM;
-    private ArrayList<TextView> textViewStorage;
-    private BluetoothSocket mSocket;
-    private final BluetoothDevice mDevice;
-    private BluetoothAdapter mBluetoothAdapter;
-    private final UUID MY_UUID = UUID.fromString("c1f5f63e-17c7-44fb-a037-c6eb48136c1f");
     private static final String TAG = "INFO";
 
-    public ConnectThread(BluetoothDevice device, BluetoothAdapter adapter, ArrayList textViewStorage) {
-        // Use a temporary object that is later assigned to mSocket
-        BluetoothSocket tmp = null;
-        mDevice = device;
+    private ArrayList<TextView> textViewStorage;
+    private BluetoothSocket bluetoothSocket;
+    private final BluetoothDevice bluetoothDevice;
+    private final UUID MY_UUID = UUID.fromString("c1f5f63e-17c7-44fb-a037-c6eb48136c1f");
+
+    public ConnectThread(BluetoothDevice device, ArrayList textViewStorage) {
+        BluetoothSocket temporaryBtS = null;
+        bluetoothDevice = device;
 
         try {
-            // Get a BluetoothSocket to connect with the given BluetoothDevice.
-            // MY_UUID is the app's UUID string, also used in the server code.
-            tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
+            temporaryBtS = device.createRfcommSocketToServiceRecord(MY_UUID);
         } catch (IOException e) {
             Log.e(TAG, "Socket's create() method failed", e);
         }
         this.textViewStorage = textViewStorage;
-        mBluetoothAdapter = adapter;
-        mSocket = tmp;
+        bluetoothSocket = temporaryBtS;
     }
 
     public void run() {
-
         try {
-            // Connect to the remote device through the socket. This call blocks
-            // until it succeeds or throws an exception.
-            mSocket.connect();
+            bluetoothSocket.connect();
         } catch (IOException connectException) {
-            // unable to connect; tries again
-            try {
-                mSocket = (BluetoothSocket) mDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(mDevice,1);
-                mSocket.connect();
-            } catch (Exception rx){
-                try{
-                    // Unable to connect; close the socket and return.
-                    mSocket.close();
-                }catch(IOException ioe){
-                    Log.e(TAG, "Could not close the client socket", ioe);
-                    return;
-                }
-            }
-
+            tryToConnectAgain();
         }
-
-        // The connection attempt succeeded. Perform work associated with
-        // the connection in a separate thread.
-        (mHandleSTM = new HandleSTM(mSocket,textViewStorage)).start();
+        (new HandleSTM(bluetoothSocket, textViewStorage)).start();
     }
 
-    // Closes the client socket and causes the thread to finish.
-    public void cancel() {
+    private void tryToConnectAgain() {
         try {
-            mSocket.close();
+            bluetoothSocket = (BluetoothSocket) bluetoothDevice.getClass().getMethod("createRfcommSocket", new Class[]{int.class}).invoke(bluetoothDevice, 1);
+            bluetoothSocket.connect();
+        } catch (Exception ex) {
+            cancel();
+        }
+    }
+
+    private void cancel() {
+        try {
+            bluetoothSocket.close();
         } catch (IOException e) {
             Log.e(TAG, "Could not close the client socket", e);
         }
