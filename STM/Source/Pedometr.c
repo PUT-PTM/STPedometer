@@ -10,12 +10,8 @@
 TM_LIS302DL_LIS3DSH_t Axes_Data;
 TM_LIS302DL_LIS3DSH_Device_t IMU_Type;
 GPIO_InitTypeDef GPIO_InitStruct;
-float32_t FFT_InputSamples[SAMPLES] = {0.0};
-float32_t FFT_OutputSamples[FFT_SIZE];
-arm_cfft_radix4_instance_f32 S;
-uint16_t n = 0;
-float32_t maxValue;
-uint32_t maxIndex;
+uint8_t sample = 0;
+
 void USART_puts(USART_TypeDef* USARTx, volatile char *s)
 {
 	while(*s)
@@ -37,17 +33,26 @@ void TIM3_IRQHandler(void)
 		GPIO_ToggleBits(GPIOD,GPIO_Pin_12);
 		GPIO_ToggleBits(GPIOD,GPIO_Pin_13);
 
-//    	char buff[50];
-//    	itoa(Axes_Data.Y,buff,10);
+		char buff[10];
+		itoa(Axes_Data.Y, buff,10);
 
-		if (n < SAMPLES)
+		if (sample == 0)
 		{
-			FFT_InputSamples[n++] = 2.0;//(float32_t)Axes_Data.Y;
-			FFT_InputSamples[n++] = 0;
+			USART_puts(USART3,"#"); // pocz¹tek ramki
+			sample++;
+		}
+		else if (sample == 33)
+		{
+			USART_puts(USART3,"!"); // koniec ramki
+			sample = 0;
+		}
+		else
+		{
+			USART_puts(USART3,buff); // dane do przetworzenia
+			sample++;
 		}
 
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-
 	}
 }
 void USART3Init(uint32_t BaudRate)
@@ -112,8 +117,8 @@ void Tim3Init(uint32_t Period, uint16_t Prescaler)
 	TIM_Cmd(TIM3, ENABLE);
 
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-
 	NVIC_InitTypeDef NVIC_InitStructure;
+
 	// numer przerwania
 	NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn;
 	// priorytet g³ówny
