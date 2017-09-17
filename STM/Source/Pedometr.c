@@ -11,7 +11,30 @@ TM_LIS302DL_LIS3DSH_t Axes_Data;
 TM_LIS302DL_LIS3DSH_Device_t IMU_Type;
 GPIO_InitTypeDef GPIO_InitStruct;
 uint8_t sample = 0;
+const int N = 64;
+volatile double im[64] = {0};
+volatile double re[64] = {0};
+volatile double mag[64] = {0};
+volatile double gauss[64];
+volatile double result[64];
+volatile int maxMagFreq;
+unsigned char FFT_Flag = 0;
 
+
+void HC_SEND_double(volatile double value)
+{
+	char buff[20];
+	sprintf(buff,"\n%3.3f",value);
+	USART_puts(USART3,buff);
+	USART_puts(USART3,"\n\r");
+}
+void HC_SEND_int(volatile uint8_t value)
+{
+	char buff[20];
+	sprintf(buff,"\n%d",value);
+	USART_puts(USART3,buff);
+	USART_puts(USART3,"\n\r");
+}
 void USART_puts(USART_TypeDef* USARTx, volatile char *s)
 {
 	while(*s)
@@ -23,36 +46,16 @@ void USART_puts(USART_TypeDef* USARTx, volatile char *s)
 		*s++;
 	}
 }
-void TIM3_IRQHandler(void)
+void ClearBuffers()
 {
-	if(TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
+	uint8_t k;
+	for (k = 0; k < N; k++)
 	{
-
-		TM_LIS302DL_LIS3DSH_ReadAxes(&Axes_Data);
-
-		GPIO_ToggleBits(GPIOD,GPIO_Pin_12);
-		GPIO_ToggleBits(GPIOD,GPIO_Pin_13);
-
-		char buff[10];
-		itoa(Axes_Data.Y, buff,10);
-
-		if (sample == 0)
-		{
-			USART_puts(USART3,"#"); // pocz¹tek ramki
-			sample++;
-		}
-		else if (sample == 33)
-		{
-			USART_puts(USART3,"!"); // koniec ramki
-			sample = 0;
-		}
-		else
-		{
-			USART_puts(USART3,buff); // dane do przetworzenia
-			sample++;
-		}
-
-		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+		re[k] = 0;
+		im[k] = 0;
+		mag[k] = 0;
+		gauss[k] = 0;
+		result[k] = 0;
 	}
 }
 void USART3Init(uint32_t BaudRate)
@@ -140,5 +143,5 @@ void LisInit(void)
 	if (TM_LIS302DL_LIS3DSH_Detect() == TM_LIS302DL_LIS3DSH_Device_LIS302DL)
 		TM_LIS302DL_LIS3DSH_Init(TM_LIS302DL_Sensitivity_2_3G, TM_LIS302DL_Filter_2Hz);
 	else if (TM_LIS302DL_LIS3DSH_Detect() == TM_LIS302DL_LIS3DSH_Device_LIS3DSH)
-		TM_LIS302DL_LIS3DSH_Init(TM_LIS3DSH_Sensitivity_2G, TM_LIS3DSH_Filter_800Hz);
+		TM_LIS302DL_LIS3DSH_Init(TM_LIS3DSH_Sensitivity_2G, TM_LIS3DSH_Filter_50Hz); // 800
 }

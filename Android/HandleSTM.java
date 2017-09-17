@@ -4,6 +4,8 @@ import android.bluetooth.BluetoothSocket;
 import android.util.Log;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -50,14 +52,14 @@ public class HandleSTM extends Thread {
     }
 
     public void run() {
-        byte[] buffer = new byte[1024];
+
 
         while (true) {
             try {
+                byte[] buffer = new byte[32];
                 inStream.read(buffer);
                 increaseValueAfterStep();
-
-            } catch (IOException e) {
+      } catch (IOException e) {
                 Log.d(TAG, "Input stream was disconnected", e);
                 break;
             }
@@ -68,6 +70,7 @@ public class HandleSTM extends Thread {
         increaseValueOfSteps();
         increaseValueOfMeters();
         increaseValueOfCalories();
+
 
         textViewSteps.post(new Runnable() {
             public void run() {

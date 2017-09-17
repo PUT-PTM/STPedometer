@@ -120,10 +120,8 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothDevice getDevice() {
         Set<BluetoothDevice> pairedDevices = bluetoothAdapterOfDevice.getBondedDevices();
         if (pairedDevices.size() > 0) {
-
             for (BluetoothDevice device : pairedDevices) {
-
-                if (device.getName().equals("HC-05")) {
+                if (device.getName().equals("HC-06")) {
                     return device;
                 }
             }
