@@ -1,5 +1,23 @@
 #include "fft.h"
-
+/***************************************************************
+* fft.c
+* Douglas L. Jones
+* University of Illinois at Urbana-Champaign
+* January 19, 1992
+* http://cnx.rice.edu/content/m12016/latest/
+*
+*   fft: in-place radix-2 DIT DFT of a complex input
+*
+*   input:
+* n: length of FFT: must be a power of two
+* m: n = 2**m
+*   input/output
+* x: double array of length n with real part of data
+* y: double array of length n with imag part of data
+*
+*   Permission to copy and use this program is granted
+*   as long as this header is included.
+****************************************************************/
 
 void fft(double x[], double y[], int n) {
         int m = (int) (log(n) / log(2));
@@ -64,7 +82,7 @@ void fft(double x[], double y[], int n) {
         free(Cos);
 
     }
-
+/////// M.MELLER////////////////////////////////////
 void CalcMagnitude(double Re[], double Im[], double Mag[], int n)
 {
 	for (int i = 0; i < n; i++)
