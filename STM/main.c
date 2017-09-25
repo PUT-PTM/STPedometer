@@ -34,7 +34,7 @@ int main(void) {
 	LedOutInit(GPIOD, GPIO_Pin_12, 1);
 	LedOutInit(GPIOD, GPIO_Pin_13, 0);
 	USART3Init(9600);
-	Tim3Init(10000, 262); // 420, 4360 262->64Hz ---> 64 samples ~= 1s
+	Tim3Init(10000, 60); // 420, 4360 262->64Hz ---> 64 samples ~= 1s
 	LisInit();
 
 	while (1) {
@@ -44,7 +44,9 @@ int main(void) {
 			fft(re, im, N);
 			CalcMagnitude(re, im, mag, N);
 			maxMagFreq = GetMaxIndex(mag, N);
-				HC_SEND_int(maxMagFreq);
+			if(maxMagFreq == 2 || maxMagFreq == 3)
+			HC_SEND_int(maxMagFreq);
+
 			ClearBuffers();
 			sample = 0;
 			FFT_Flag = 0;
@@ -53,4 +55,3 @@ int main(void) {
 
 	}
 }
-

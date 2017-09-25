@@ -24,16 +24,14 @@ unsigned char FFT_Flag = 0;
 void HC_SEND_double(volatile double value)
 {
 	char buff[20];
-	sprintf(buff,"\n%3.3f",value);
+	sprintf(buff,"%3.3f",value);
 	USART_puts(USART3,buff);
-	USART_puts(USART3,"\n\r");
 }
 void HC_SEND_int(volatile uint8_t value)
 {
 	char buff[20];
-	sprintf(buff,"\n%d",value);
+	sprintf(buff,"%d",value);
 	USART_puts(USART3,buff);
-	USART_puts(USART3,"\n\r");
 }
 void USART_puts(USART_TypeDef* USARTx, volatile char *s)
 {
