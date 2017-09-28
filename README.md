@@ -4,7 +4,7 @@
 	Results are crucial for further calculations to define if step was made.
 	Every time step is made board sends a signal by bluetooth to the phone with android where app counts every step that has been made. 
 	To communicate with phone we used bluetooth module HC-06.  <br />
-<B>Tools:<B> CooCox Version: 1.7.0, Android Studio Version 2.3.3 <br />
+<B>Tools:</B> CooCox Version: 1.7.0, Android Studio Version 2.3.3 <br />
 <B>How to run:</B> To make it work it is enough to connect bluetooth module to STM32 and then the board to the power supply.
 	To count steps it is necessary to have an android mobile phone with installed app.
 ####
